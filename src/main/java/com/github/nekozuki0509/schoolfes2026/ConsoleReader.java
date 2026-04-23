@@ -13,9 +13,14 @@ public class ConsoleReader {
             Scanner scanner = new Scanner(System.in);
             while (!Thread.currentThread().isInterrupted()) {
                 if (scanner.hasNextLine()) {
+                    String input = scanner.nextLine().trim();
                     CompletableFuture<String> future = pendingQueue.poll();
                     if (future != null) {
-                        future.complete(scanner.nextLine().trim());
+                        future.complete(input);
+                    } else if (input.startsWith("/")) {
+                        throw new UnsupportedOperationException("todo");
+                    } else {
+                        System.out.println("no pending question, input ignored");
                     }
                 }
             }
@@ -24,11 +29,18 @@ public class ConsoleReader {
         t.start();
     }
 
-    public CompletableFuture<String> ask(String prompt) {
-        System.out.print(prompt + "\n>>>");
+    public CompletableFuture<Integer> ask(String prompt) {
+        System.out.println(prompt + "\n>>>");
         CompletableFuture<String> future = new CompletableFuture<>();
         pendingQueue.offer(future);
 
-        return future;
+        return future.thenCompose(input -> {
+            try {
+                return CompletableFuture.completedFuture(Integer.parseInt(input));
+            } catch (NumberFormatException e) {
+                System.out.println("invalid input. pls try again\n>>>");
+                return ask(prompt);
+            }
+        });
     }
 }

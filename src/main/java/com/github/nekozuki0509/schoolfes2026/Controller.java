@@ -67,10 +67,23 @@ public class Controller {
     @Getter
     private static final Map<Medias, MediaPlayer> mediaPlayers = new HashMap<>();
 
-    private static final Queue<MediaPlayer> requestedPlayers = new ArrayDeque<>();
+    @Getter
+    private static final Queue<Runnable> requestedAction = new ArrayDeque<>();
 
     @Getter
     private static final ConsoleReader console = new ConsoleReader();
+
+    @Getter
+    @Setter
+    private static int selectedAns = -1;
+
+    @Getter
+    @Setter
+    private static int currentAns = -1;
+
+    @Getter
+    @Setter
+    private static boolean countdownFinished = false;
 
     @FXML
     void initialize() {
@@ -95,34 +108,53 @@ public class Controller {
 
         goOver.setCycleCount(MediaPlayer.INDEFINITE);
         goOver.setOnEndOfMedia(() -> {
-            if (!requestedPlayers.isEmpty()) {
-                MediaPlayer nextPlayer = requestedPlayers.poll();
-                mediaView.setMediaPlayer(nextPlayer);
-                nextPlayer.play();
+            if (!requestedAction.isEmpty()) {
+                requestedAction.removeIf(runnable -> {
+                    new Thread(runnable).start();
+                    return true;
+                });
             }
         });
 
         left.setOnEndOfMedia(() -> {
+            if (selectedAns == currentAns || currentAns == -1) {
+                Controller.getInstance().getMediaView().setMediaPlayer(success);
+                success.play();
+            } else {
+                Controller.getInstance().getMediaView().setMediaPlayer(fail);
+                fail.play();
+            }
+
             mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
             mediaPlayers.get(Medias.GoOver).play();
         });
 
         right.setOnEndOfMedia(() -> {
+            if (selectedAns == currentAns || currentAns == -1) {
+                Controller.getInstance().getMediaView().setMediaPlayer(success);
+                success.play();
+            } else {
+                Controller.getInstance().getMediaView().setMediaPlayer(fail);
+                fail.play();
+            }
+
             mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
             mediaPlayers.get(Medias.GoOver).play();
         });
 
         start.setCycleCount(MediaPlayer.INDEFINITE);
         start.setOnEndOfMedia(() -> {
-            if (!requestedPlayers.isEmpty()) {
-                MediaPlayer nextPlayer = requestedPlayers.poll();
-                mediaView.setMediaPlayer(nextPlayer);
-                nextPlayer.play();
+            if (!requestedAction.isEmpty()) {
+                requestedAction.removeIf(runnable -> {
+                    new Thread(runnable).start();
+                    return true;
+                });
             }
         });
 
         success.setOnEndOfMedia(() -> {
-            throw new IllegalStateException("todo");
+            mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
+            mediaPlayers.get(Medias.GoOver).play();
         });
 
         fail.setOnEndOfMedia(() -> {
