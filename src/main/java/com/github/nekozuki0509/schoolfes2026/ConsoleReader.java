@@ -29,17 +29,23 @@ public class ConsoleReader {
         t.start();
     }
 
-    public CompletableFuture<Integer> ask(String prompt) {
-        System.out.println(prompt + "\n>>>");
+    public CompletableFuture<Integer> ask(String prompt, int min, int max) {
+        System.out.print(prompt + "\n>>>");
         CompletableFuture<String> future = new CompletableFuture<>();
         pendingQueue.offer(future);
 
         return future.thenCompose(input -> {
             try {
+                int ans = Integer.parseInt(input);
+                if (ans < min || max < ans) {
+                    System.out.println("invalid input. pls try again");
+                    return ask(prompt, min, max);
+                }
+
                 return CompletableFuture.completedFuture(Integer.parseInt(input));
             } catch (NumberFormatException e) {
-                System.out.println("invalid input. pls try again\n>>>");
-                return ask(prompt);
+                System.out.println("invalid input. pls try again");
+                return ask(prompt, min, max);
             }
         });
     }

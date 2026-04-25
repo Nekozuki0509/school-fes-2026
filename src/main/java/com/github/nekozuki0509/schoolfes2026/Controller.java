@@ -7,10 +7,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,7 +40,7 @@ public class Controller {
     private MediaView mediaView;
 
     @FXML
-    private Pane pane;
+    private AnchorPane pane;
 
     @Getter
     @FXML
@@ -75,15 +77,23 @@ public class Controller {
 
     @Getter
     @Setter
-    private static int selectedAns = -1;
+    private static volatile int selectedAns = -1;
 
     @Getter
     @Setter
-    private static int currentAns = -1;
+    private static volatile int currentAns = 0;
 
     @Getter
     @Setter
-    private static boolean countdownFinished = false;
+    private static volatile boolean countdownFinished = false;
+
+    @Getter
+    @Setter
+    private static volatile boolean lastAnswerCorrect = false;
+
+    @Getter
+    @Setter
+    private static volatile boolean lastWasLastProblem = false;
 
     @FXML
     void initialize() {
@@ -98,6 +108,22 @@ public class Controller {
         assert rightTextArea != null : "fx:id=\"rightTextArea\" was not injected: check your FXML file 'main.fxml'.";
 
         Instance = this;
+
+        mediaView.fitWidthProperty().bind(pane.widthProperty());
+        mediaView.fitHeightProperty().bind(pane.heightProperty());
+
+        problemImageView.fitWidthProperty().bind(pane.widthProperty().subtract(80));
+        problemTextArea.prefWidthProperty().bind(pane.widthProperty().subtract(80));
+
+        leftImageView.fitWidthProperty().bind(pane.widthProperty().divide(2).subtract(60));
+        leftTextArea.prefWidthProperty().bind(pane.widthProperty().divide(2).subtract(60));
+
+        rightImageView.fitWidthProperty().bind(pane.widthProperty().divide(2).subtract(60));
+        rightTextArea.prefWidthProperty().bind(pane.widthProperty().divide(2).subtract(60));
+
+        leftImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
+        rightImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
+
 
         MediaPlayer goOver = new MediaPlayer(new Media(Objects.requireNonNull(Launcher.class.getResource(Medias.GoOver.getPath())).toExternalForm()));
         MediaPlayer left = new MediaPlayer(new Media(Objects.requireNonNull(Launcher.class.getResource(Medias.Left.getPath())).toExternalForm()));
@@ -117,29 +143,27 @@ public class Controller {
         });
 
         left.setOnEndOfMedia(() -> {
-            if (selectedAns == currentAns || currentAns == -1) {
-                Controller.getInstance().getMediaView().setMediaPlayer(success);
+            if (lastAnswerCorrect) {
+                mediaView.setMediaPlayer(success);
+                success.seek(Duration.ZERO);
                 success.play();
             } else {
-                Controller.getInstance().getMediaView().setMediaPlayer(fail);
+                mediaView.setMediaPlayer(fail);
+                fail.seek(Duration.ZERO);
                 fail.play();
             }
-
-            mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
-            mediaPlayers.get(Medias.GoOver).play();
         });
 
         right.setOnEndOfMedia(() -> {
-            if (selectedAns == currentAns || currentAns == -1) {
-                Controller.getInstance().getMediaView().setMediaPlayer(success);
+            if (lastAnswerCorrect) {
+                mediaView.setMediaPlayer(success);
+                success.seek(Duration.ZERO);
                 success.play();
             } else {
-                Controller.getInstance().getMediaView().setMediaPlayer(fail);
+                mediaView.setMediaPlayer(fail);
+                fail.seek(Duration.ZERO);
                 fail.play();
             }
-
-            mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
-            mediaPlayers.get(Medias.GoOver).play();
         });
 
         start.setCycleCount(MediaPlayer.INDEFINITE);
@@ -153,13 +177,21 @@ public class Controller {
         });
 
         success.setOnEndOfMedia(() -> {
-            mediaView.setMediaPlayer(mediaPlayers.get(Medias.GoOver));
-            mediaPlayers.get(Medias.GoOver).play();
+            if (lastWasLastProblem) {
+                mediaView.setMediaPlayer(start);
+                start.seek(Duration.ZERO);
+                start.play();
+            } else {
+                mediaView.setMediaPlayer(goOver);
+                goOver.seek(Duration.ZERO);
+                goOver.play();
+            }
         });
 
         fail.setOnEndOfMedia(() -> {
-            mediaView.setMediaPlayer(mediaPlayers.get(Medias.Start));
-            mediaPlayers.get(Medias.Start).play();
+            mediaView.setMediaPlayer(start);
+            start.seek(Duration.ZERO);
+            start.play();
         });
 
         Controller.getMediaPlayers().put(Medias.GoOver, goOver);

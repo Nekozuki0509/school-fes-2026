@@ -3,6 +3,7 @@ plugins {
     application
     id("org.javamodularity.moduleplugin") version "1.8.15"
     id("org.openjfx.javafxplugin") version "0.0.13"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.beryx.jlink") version "2.25.0"
 }
 
@@ -56,5 +57,12 @@ jlink {
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
     launcher {
         name = "app"
+    }
+}
+
+val jar by tasks.getting(Jar::class) {
+    project.setProperty("mainClassName", "com.github.nekozuki0509.schoolfes2026.Application")
+    manifest {
+        attributes["Main-Class"] = "com.github.nekozuki0509.schoolfes2026.Application"
     }
 }

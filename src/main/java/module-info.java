@@ -1,4 +1,4 @@
-module com.github.nekozuki0509.schoolfes2026 {
+module com.github.nekozuki050.schoolfes2026 {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.media;
