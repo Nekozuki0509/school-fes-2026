@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.github.nekozuki0509"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -28,11 +28,11 @@ tasks.withType<JavaCompile> {
 
 application {
     mainModule.set("com.github.nekozuki0509.schoolfes2026")
-    mainClass.set("com.github.nekozuki0509.schoolfes2026.Application")
+    mainClass.set("com.github.nekozuki0509.schoolfes2026.Launcher")
 }
 
 javafx {
-    version = "21.0.6"
+    version = "23.0.1"
     modules = listOf("javafx.controls", "javafx.fxml", "javafx.media")
 }
 
@@ -54,15 +54,19 @@ tasks.withType<Test> {
 
 jlink {
     imageZip.set(layout.buildDirectory.file("/distributions/app-${javafx.platform.classifier}.zip"))
-    options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
+    options.set(listOf("--strip-debug", "--compress=2", "--no-header-files", "--no-man-pages"))
     launcher {
         name = "app"
+    }
+    jpackage {
+        installerType = "app-image"
+        imageOptions = listOf("--win-console")
     }
 }
 
 val jar by tasks.getting(Jar::class) {
-    project.setProperty("mainClassName", "com.github.nekozuki0509.schoolfes2026.Application")
+    project.setProperty("mainClassName", "com.github.nekozuki0509.schoolfes2026.Launcher")
     manifest {
-        attributes["Main-Class"] = "com.github.nekozuki0509.schoolfes2026.Application"
+        attributes["Main-Class"] = "com.github.nekozuki0509.schoolfes2026.Launcher"
     }
 }

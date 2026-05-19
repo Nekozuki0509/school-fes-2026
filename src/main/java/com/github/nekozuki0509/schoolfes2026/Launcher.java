@@ -5,9 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import javafx.application.Platform;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 import lombok.Getter;
 
 import java.io.InputStreamReader;
@@ -24,17 +22,14 @@ public class Launcher {
     static final Problem lastProblem = new Problem("落ちたいですか？", "はい", "いいえ", -1);
 
     public static void main(String[] args) {
-        Controller.setProblems(new Gson().fromJson(new InputStreamReader(Objects.requireNonNull(Launcher.class.getResourceAsStream("problems.json"))), new TypeToken<Map<String, List<Problem>>>(){
+        Controller.setProblems(new Gson().fromJson(new InputStreamReader(Objects.requireNonNull(Launcher.class.getResourceAsStream("problems.json"))), new TypeToken<Map<String, List<Problem>>>() {
         }.getType()));
 
         javafx.application.Application.launch(Application.class, args);
     }
 
     public static void init() {
-        MediaPlayer start = Controller.getMediaPlayers().get(Medias.Start);
-        Controller.getInstance().getMediaView().setMediaPlayer(start);
-        start.seek(Duration.ZERO);
-        start.play();
+        Controller.safeSwitch(Medias.Start);
 
         Map<Integer, String> tmp = new HashMap<>();
         StringBuilder builder = new StringBuilder("pls type in course ");
@@ -48,18 +43,17 @@ public class Launcher {
     }
 
     public static void game(Map<Integer, String> tmp, String courseAsk) {
-        Controller.getConsole().ask(courseAsk, 0, 2)
+        Controller.getConsole().ask(courseAsk, 0, tmp.size() - 1)
                 .thenAccept(ans -> {
                     System.out.printf("starting course: %s...%n", tmp.get(ans));
                     Controller.getRequestedAction().add(() -> {
-                        CompletableFuture<Void> mediaReady = new CompletableFuture<>();
-                        Platform.runLater(() -> {
-                            Controller.getInstance().getMediaView().setMediaPlayer(Controller.getMediaPlayers().get(Medias.GoOver));
-                            Controller.getMediaPlayers().get(Medias.GoOver).seek(Duration.ZERO);
-                            Controller.getMediaPlayers().get(Medias.GoOver).play();
-                            mediaReady.complete(null);
-                        });
-                        mediaReady.join();
+                        Controller.safeSwitch(Medias.GoOver);
+//                        CompletableFuture<Void> mediaReady = new CompletableFuture<>();
+//                        Platform.runLater(() -> {
+//                            Controller.safeSwitch(Controller.getMediaPlayers().get(Medias.GoOver));
+//                            mediaReady.complete(null);
+//                        });
+//                        mediaReady.join();
 
                         AtomicBoolean last = new AtomicBoolean(false);
                         for (Problem problem : Controller.getProblems().get(tmp.get(ans))) {
@@ -85,14 +79,14 @@ public class Launcher {
 
         Platform.runLater(() -> {
             Controller.getInstance().getProblemImageView().setVisible(true);
-            Controller.getInstance().getProblemTextArea().setText(problem.problem);
-            Controller.getInstance().getProblemTextArea().setVisible(true);
+            Controller.getInstance().getProblemLabel().setText(problem.problem);
+            Controller.getInstance().getProblemLabel().setVisible(true);
             Controller.getInstance().getLeftImageView().setVisible(true);
-            Controller.getInstance().getLeftTextArea().setText(problem.left);
-            Controller.getInstance().getLeftTextArea().setVisible(true);
+            Controller.getInstance().getLeftLabel().setText(problem.left);
+            Controller.getInstance().getLeftLabel().setVisible(true);
             Controller.getInstance().getRightImageView().setVisible(true);
-            Controller.getInstance().getRightTextArea().setText(problem.right);
-            Controller.getInstance().getRightTextArea().setVisible(true);
+            Controller.getInstance().getRightLabel().setText(problem.right);
+            Controller.getInstance().getRightLabel().setVisible(true);
             Controller.getInstance().getProgressBar().setVisible(true);
             Controller.getInstance().getProgressBar().setProgress(1.0);
             Controller.getInstance().getProgressBar().setStyle("-fx-accent: green;");
@@ -163,14 +157,14 @@ public class Launcher {
                     CompletableFuture<Void> uiCleared = new CompletableFuture<>();
                     Platform.runLater(() -> {
                         Controller.getInstance().getProblemImageView().setVisible(false);
-                        Controller.getInstance().getProblemTextArea().setVisible(false);
-                        Controller.getInstance().getProblemTextArea().setText("");
+                        Controller.getInstance().getProblemLabel().setVisible(false);
+                        Controller.getInstance().getProblemLabel().setText("");
                         Controller.getInstance().getLeftImageView().setVisible(false);
-                        Controller.getInstance().getLeftTextArea().setVisible(false);
-                        Controller.getInstance().getLeftTextArea().setText("");
+                        Controller.getInstance().getLeftLabel().setVisible(false);
+                        Controller.getInstance().getLeftLabel().setText("");
                         Controller.getInstance().getRightImageView().setVisible(false);
-                        Controller.getInstance().getRightTextArea().setVisible(false);
-                        Controller.getInstance().getRightTextArea().setText("");
+                        Controller.getInstance().getRightLabel().setVisible(false);
+                        Controller.getInstance().getRightLabel().setText("");
                         Controller.getInstance().getProgressBar().setVisible(false);
                         Controller.getInstance().getLeftImageView().setEffect(null);
                         Controller.getInstance().getRightImageView().setEffect(null);
@@ -183,19 +177,9 @@ public class Launcher {
                     Controller.setSelectedAns(-1);
 
                     if (ans2 == 0) {
-                        Controller.getRequestedAction().add(() -> Platform.runLater(() -> {
-                            MediaPlayer left = Controller.getMediaPlayers().get(Medias.Left);
-                            Controller.getInstance().getMediaView().setMediaPlayer(left);
-                            left.seek(Duration.ZERO);
-                            left.play();
-                        }));
+                        Controller.getRequestedAction().add(() -> Controller.safeSwitch(Medias.Left));
                     } else {
-                        Controller.getRequestedAction().add(() -> Platform.runLater(() -> {
-                            MediaPlayer right = Controller.getMediaPlayers().get(Medias.Right);
-                            Controller.getInstance().getMediaView().setMediaPlayer(right);
-                            right.seek(Duration.ZERO);
-                            right.play();
-                        }));
+                        Controller.getRequestedAction().add(() -> Controller.safeSwitch(Medias.Right));
                     }
 
                     return ans2 == problem.ans || problem.ans == -1;
