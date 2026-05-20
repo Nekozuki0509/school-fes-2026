@@ -117,7 +117,7 @@ public class Launcher {
                         Controller.getInstance().getProgressBar().setStyle("-fx-accent: red;");
                     }
                     if (Controller.getSelectedAns() != -1) {
-                        ImageView target = Controller.getSelectedAns() == 0 ? Controller.getInstance().getLeftImageView() : Controller.getInstance().getRightImageView();
+                        ImageView target = Controller.getSelectedAns() == 0 ? Controller.getInstance().getRightImageView() : Controller.getInstance().getLeftImageView();
                         if (border.get()) {
                             target.setEffect(null);
                         } else {
@@ -137,7 +137,7 @@ public class Launcher {
             Controller.setCountdownFinished(true);
         }).start();
 
-        return Controller.getConsole().ask("pls type in the ans 0: left, 1: right", 0, 1)
+        return Controller.getConsole().ask("pls type in the ans 1: left, 0: right", 0, 1)
                 .thenApply(ans2 -> {
                     System.out.printf("ans accepted: %d%n", ans2);
                     Controller.setSelectedAns(ans2);
@@ -175,12 +175,7 @@ public class Launcher {
                     Controller.setLastAnswerCorrect(ans2 == Controller.getCurrentAns() || Controller.getCurrentAns() == -1);
                     Controller.setLastWasLastProblem(problem.ans == -1);
                     Controller.setSelectedAns(-1);
-
-                    if (ans2 == 0) {
-                        Controller.getRequestedAction().add(() -> Controller.safeSwitch(Medias.Left));
-                    } else {
-                        Controller.getRequestedAction().add(() -> Controller.safeSwitch(Medias.Right));
-                    }
+                    Controller.getRequestedAction().add(() -> Controller.safeSwitch(ans2==0?Medias.Right:Medias.Left));
 
                     return ans2 == problem.ans || problem.ans == -1;
                 });
