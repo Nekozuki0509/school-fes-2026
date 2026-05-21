@@ -17,9 +17,9 @@
                 <Image url="@textures/png/problem.png" />
             </image>
         </ImageView>
-      <Label fx:id="problemLabel" prefHeight="150.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
+      <Label fx:id="problemLabel" prefHeight="150.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0" wrapText="true" >
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="50.0" />
          </font>
       </Label>
         <ImageView fx:id="leftImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
@@ -27,9 +27,9 @@
                 <Image url="@textures/png/left.png" />
             </image>
         </ImageView>
-      <Label fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
+      <Label fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0" wrapText="true" >
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="240.0" />
          </font>
       </Label>
         <ImageView fx:id="rightImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
@@ -37,9 +37,9 @@
                 <Image url="@textures/png/right.png" />
             </image>
         </ImageView>
-      <Label fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
+      <Label fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0" wrapText="true" >
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="240.0" />
          </font>
       </Label>
     </children>

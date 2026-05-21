@@ -17,8 +17,6 @@ public class ConsoleReader {
                     CompletableFuture<String> future = pendingQueue.poll();
                     if (future != null) {
                         future.complete(input);
-                    } else if (input.startsWith("/")) {
-                        throw new UnsupportedOperationException("todo");
                     } else {
                         System.out.println("no pending question, input ignored");
                     }

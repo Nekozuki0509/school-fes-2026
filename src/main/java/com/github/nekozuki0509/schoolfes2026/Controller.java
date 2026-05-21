@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.media.Media;
@@ -69,14 +68,13 @@ public class Controller {
     @Setter
     private static Map<String, List<Launcher.Problem>> problems;
 
-    // URL strings for each media type — each MediaPlayer gets its own fresh Media instance
+    // URL strings for each media type (kept for error-recovery re-creation)
     private static final Map<Medias, String> mediaSources = new HashMap<>();
 
-    // Pre-created MediaPlayers ready for instant playback (accessed only on FX thread)
-    private static final Map<Medias, MediaPlayer> readyPlayers = new HashMap<>();
-
-    // Old players waiting to be disposed (delayed to avoid native resource contention)
-    private static final List<MediaPlayer> disposalQueue = new ArrayList<>();
+    // Persistent MediaPlayers — created once at startup, reused via stop/seek/play.
+    // Never disposed during gameplay.  This avoids all GStreamer / WMF native
+    // resource lifecycle issues that caused ERROR_MEDIA_INVALID and freezes.
+    private static final Map<Medias, MediaPlayer> players = new HashMap<>();
 
     @Getter
     private static final Queue<Runnable> requestedAction = new ConcurrentLinkedDeque<>();
@@ -133,97 +131,101 @@ public class Controller {
         leftImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
         rightImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
 
-        // Store URL strings and pre-create all MediaPlayers so they are ready instantly
+        // Create exactly ONE Media + MediaPlayer per type.
+        // These are reused for the entire lifetime of the application.
         for (Medias m : Medias.values()) {
-            mediaSources.put(m, Objects.requireNonNull(
-                    Launcher.class.getResource(m.getPath())).toExternalForm());
-            readyPlayers.put(m, createPlayer(m));
+            String src = Objects.requireNonNull(
+                    Launcher.class.getResource(m.getPath())).toExternalForm();
+            mediaSources.put(m, src);
+            players.put(m, createPlayer(m, new Media(src)));
         }
 
         Launcher.init();
     }
 
     /**
-     * Creates a fresh MediaPlayer with its own Media instance for the given type.
-     * Each player gets an independent Media object to avoid sharing native
-     * Windows Media Foundation resources, which can cause freezes.
+     * Creates a MediaPlayer for the given type and Media object.
+     * The player is intended to be long-lived and reused via stop → seek → play.
+     *
+     * All onEndOfMedia / onRepeat callbacks use Platform.runLater so they
+     * never execute inside the native GStreamer callback stack.
      */
-    private static MediaPlayer createPlayer(Medias type) {
-        MediaPlayer player = new MediaPlayer(new Media(mediaSources.get(type)));
+    private static MediaPlayer createPlayer(Medias type, Media media) {
+        MediaPlayer player = new MediaPlayer(media);
+
+        // Log errors but do NOT auto-recreate here.
+        // Recovery is handled in safeSwitch when the player is actually needed.
+        player.setOnError(() ->
+                System.err.println("[MediaPlayer] ERROR on " + type + ": " + player.getError()));
+        player.setOnStalled(() ->
+                System.err.println("[MediaPlayer] STALLED on " + type + " – waiting for buffer…"));
+
         switch (type) {
-            case GoOver -> {
+            case GoOver, Start -> {
                 player.setCycleCount(MediaPlayer.INDEFINITE);
                 player.setOnRepeat(() -> {
                     if (!requestedAction.isEmpty()) {
-                        requestedAction.removeIf(runnable -> {
-                            new Thread(runnable).start();
-                            return true;
+                        Platform.runLater(() -> {
+                            Runnable r;
+                            while ((r = requestedAction.poll()) != null) {
+                                Runnable task = r;
+                                new Thread(task).start();
+                            }
                         });
                     }
                 });
             }
             case Left -> player.setOnEndOfMedia(() ->
-                    safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail));
+                    Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
             case Right -> player.setOnEndOfMedia(() ->
-                    safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail));
-            case Start -> {
-                player.setCycleCount(MediaPlayer.INDEFINITE);
-                player.setOnRepeat(() -> {
-                    if (!requestedAction.isEmpty()) {
-                        requestedAction.removeIf(runnable -> {
-                            new Thread(runnable).start();
-                            return true;
-                        });
-                    }
-                });
-            }
+                    Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
             case Success -> player.setOnEndOfMedia(() ->
-                    safeSwitch(lastWasLastProblem ? Medias.Start : Medias.GoOver));
+                    Platform.runLater(() -> safeSwitch(lastWasLastProblem ? Medias.Start : Medias.GoOver)));
             case Fail -> player.setOnEndOfMedia(() ->
-                    safeSwitch(Medias.Start));
+                    Platform.runLater(() -> safeSwitch(Medias.Start)));
         }
         return player;
     }
 
     /**
-     * Switches to a pre-buffered MediaPlayer for the given media type.
-     * Key design decisions to avoid Windows Media Foundation freezes:
-     * 1. Set new player FIRST, then stop old → no white screen gap
-     * 2. Execute directly on FX thread → no frame gap from Platform.runLater
-     * 3. Defer dispose() → avoid native resource contention
-     * 4. Each player has its own Media instance → no shared native resources
+     * Switches to the MediaPlayer for the given media type.
+     *
+     * Design: players are created once at startup and REUSED.  Switching is
+     * simply stop(current) → seek(next, 0) → play(next).  No native resource
+     * creation or disposal happens during gameplay, eliminating all GStreamer /
+     * WMF resource-exhaustion freezes and ERROR_MEDIA_INVALID errors.
+     *
+     * If a player has entered the HALTED (unrecoverable error) state, it is
+     * disposed and recreated as a one-time recovery — this will NOT loop
+     * because the error handler does not auto-recreate.
      */
     public static void safeSwitch(Medias mediaType) {
         Runnable op = () -> {
+            // ── 1. Stop the current player ──────────────────────────────
             MediaPlayer current = getInstance().getMediaView().getMediaPlayer();
-
-            // Take the pre-buffered player (instant, no creation delay)
-            MediaPlayer next = readyPlayers.remove(mediaType);
-            if (next == null) {
-                next = createPlayer(mediaType);
-            }
-
-            // Set new player FIRST so there is never a blank frame
-            getInstance().getMediaView().setMediaPlayer(next);
-            next.play();
-
-            // Stop old player AFTER the new one is set and playing.
-            // Don't dispose immediately — queue it for delayed disposal
-            // to avoid interfering with the new player's native pipeline.
             if (current != null) {
                 current.stop();
-                current.dispose();
             }
 
-            MediaPlayer replacement = createPlayer(mediaType);
-            readyPlayers.put(mediaType, replacement);
+            // ── 2. Get the target player (reused, not newly created) ────
+            MediaPlayer next = players.get(mediaType);
 
+            // If the player is in an unrecoverable error state, recreate it
+            // exactly once.  The new player's onError only logs, so this
+            // cannot loop.
+            if (next.getStatus() == MediaPlayer.Status.HALTED) {
+                System.err.println("[MediaPlayer] Recovering HALTED player for " + mediaType);
+                next.dispose();
+                next = createPlayer(mediaType, new Media(mediaSources.get(mediaType)));
+                players.put(mediaType, next);
+            }
+
+            // ── 3. Seek to start and play ───────────────────────────────
+            getInstance().getMediaView().setMediaPlayer(next);
+            next.seek(Duration.ZERO);
+            next.play();
         };
 
-        // Execute directly on FX thread — no Platform.runLater deferral.
-        // We are NOT manipulating the player that fired onEndOfMedia/onRepeat
-        // (we only stop it AFTER setting a different player), so there is no
-        // re-entrant pipeline conflict.
         if (Platform.isFxApplicationThread()) {
             op.run();
         } else {
