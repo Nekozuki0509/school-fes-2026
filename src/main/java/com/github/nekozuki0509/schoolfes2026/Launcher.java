@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter
 public class Launcher {
 
-    static final Problem lastProblem = new Problem("落ちたいですか？", "はい", "いいえ", -1);
+    static final Problem lastProblem = new Problem("落ちたいですか？", "はい", "YES", -1);
 
     public static void main(String[] args) {
         Controller.setProblems(new Gson().fromJson(new InputStreamReader(Objects.requireNonNull(Launcher.class.getResourceAsStream("problems.json"))), new TypeToken<Map<String, List<Problem>>>() {
@@ -48,12 +48,6 @@ public class Launcher {
                     System.out.printf("starting course: %s...%n", tmp.get(ans));
                     Controller.getRequestedAction().add(() -> {
                         Controller.safeSwitch(Medias.GoOver);
-//                        CompletableFuture<Void> mediaReady = new CompletableFuture<>();
-//                        Platform.runLater(() -> {
-//                            Controller.safeSwitch(Controller.getMediaPlayers().get(Medias.GoOver));
-//                            mediaReady.complete(null);
-//                        });
-//                        mediaReady.join();
 
                         AtomicBoolean last = new AtomicBoolean(false);
                         for (Problem problem : Controller.getProblems().get(tmp.get(ans))) {
@@ -61,8 +55,29 @@ public class Launcher {
                             if (!last.get()) break;
                         }
 
-                        if (last.get()) ask(lastProblem).join();
-                        game(tmp, courseAsk);
+                        if (last.get()) {
+                            Controller.getRequestedAction().add(() -> {
+                                Controller.safeSwitch(Medias.Goal);
+                                CompletableFuture<Void> goal_started = new CompletableFuture<>();
+
+                                new Thread(() -> {
+                                    goal_started.join();
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    Controller.getRequestedAction().add(() -> {
+                                        ask(lastProblem).join();
+                                        game(tmp, courseAsk);
+                                    });
+                                }).start();
+
+                                goal_started.complete(null);
+                            });
+                        } else {
+                            game(tmp, courseAsk);
+                        }
                     });
                 });
     }

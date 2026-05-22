@@ -20,8 +20,8 @@
     },
     {
       "problem": "ソースコードを一括で機械語へ翻訳することを何という？",
-      "left": "コンパイラ",
-      "right": "インタプリタ",
+      "left": "コンパイル",
+      "right": "インタプリト",
       "ans": 1
     },
     {
@@ -317,6 +317,20 @@
       "left": "森清範",
       "right": "大西良慶",
       "ans": 1
+    }
+  ],
+  "debug": [
+    {
+      "problem": "test-left",
+      "left": "foo",
+      "right": "bar",
+      "ans": 1
+    },
+    {
+      "problem": "test-right",
+      "left": "foo",
+      "right": "bar",
+      "ans": 0
     }
   ]
 }

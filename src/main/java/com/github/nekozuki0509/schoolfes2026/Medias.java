@@ -6,7 +6,8 @@ public enum Medias {
     Right("textures/media/right.mp4"),
     Start("textures/media/start.mp4"),
     Success("textures/media/success.mp4"),
-    Fail("textures/media/fail.mp4");
+    Fail("textures/media/fail.mp4"),
+    Goal("textures/media/goal.mp4");
 
     private final String path;
 

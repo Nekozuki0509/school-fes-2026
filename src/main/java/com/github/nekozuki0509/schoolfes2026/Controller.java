@@ -35,7 +35,7 @@ public class Controller {
 
     @Getter
     @FXML
-    private Label leftLabel;
+    private AutoShrinkLabel leftLabel;
 
     @Getter
     @FXML
@@ -62,7 +62,7 @@ public class Controller {
 
     @Getter
     @FXML
-    private Label rightLabel;
+    private AutoShrinkLabel rightLabel;
 
     @Getter
     @Setter
@@ -175,14 +175,14 @@ public class Controller {
                     }
                 });
             }
-            case Left -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
-            case Right -> player.setOnEndOfMedia(() ->
+            case Left, Right -> player.setOnEndOfMedia(() ->
                     Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
             case Success -> player.setOnEndOfMedia(() ->
                     Platform.runLater(() -> safeSwitch(lastWasLastProblem ? Medias.Start : Medias.GoOver)));
             case Fail -> player.setOnEndOfMedia(() ->
                     Platform.runLater(() -> safeSwitch(Medias.Start)));
+            case Goal -> player.setOnEndOfMedia(() ->
+                    Platform.runLater(() -> safeSwitch(Medias.GoOver)));
         }
         return player;
     }

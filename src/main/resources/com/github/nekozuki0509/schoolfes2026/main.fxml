@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.github.nekozuki0509.schoolfes2026.*?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ProgressBar?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.media.MediaView?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.media.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane fx:id="pane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.nekozuki0509.schoolfes2026.Controller">
+<AnchorPane fx:id="pane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.nekozuki0509.schoolfes2026.Controller">
     <children>
         <MediaView fx:id="mediaView" preserveRatio="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
         <ProgressBar fx:id="progressBar" layoutX="40.0" layoutY="180.0" prefHeight="30.0" progress="0.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="200.0" />
@@ -27,20 +27,20 @@
                 <Image url="@textures/png/left.png" />
             </image>
         </ImageView>
-      <Label fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0" wrapText="true" >
+      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" wrapText="true" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>
-      </Label>
+      </AutoShrinkLabel>
         <ImageView fx:id="rightImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
             <image>
                 <Image url="@textures/png/right.png" />
             </image>
         </ImageView>
-      <Label fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0" wrapText="true" >
+      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" wrapText="true" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>
-      </Label>
+      </AutoShrinkLabel>
     </children>
 </AnchorPane>
