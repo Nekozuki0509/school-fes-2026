@@ -17,7 +17,7 @@
                 <Image url="@textures/png/problem.png" />
             </image>
         </ImageView>
-      <Label fx:id="problemLabel" prefHeight="150.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0" wrapText="true" >
+      <Label fx:id="problemLabel" prefHeight="150.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0" wrapText="true" minWidth="0" minHeight="0">
          <font>
             <Font name="System Bold" size="50.0" />
          </font>
@@ -27,7 +27,7 @@
                 <Image url="@textures/png/left.png" />
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" wrapText="true" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
+      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0" minWidth="0" minHeight="0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>
@@ -37,7 +37,7 @@
                 <Image url="@textures/png/right.png" />
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" wrapText="true" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
+      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0" minWidth="0" minHeight="0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>

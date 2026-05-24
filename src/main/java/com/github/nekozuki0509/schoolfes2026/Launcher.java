@@ -29,8 +29,6 @@ public class Launcher {
     }
 
     public static void init() {
-        Controller.safeSwitch(Medias.Start);
-
         Map<Integer, String> tmp = new HashMap<>();
         StringBuilder builder = new StringBuilder("pls type in course ");
         int i = 0;
@@ -43,54 +41,67 @@ public class Launcher {
     }
 
     public static void game(Map<Integer, String> tmp, String courseAsk) {
-        Controller.getConsole().ask(courseAsk, 0, tmp.size() - 1)
-                .thenAccept(ans -> {
-                    System.out.printf("starting course: %s...%n", tmp.get(ans));
-                    Controller.getRequestedAction().add(() -> {
-                        Controller.safeSwitch(Medias.GoOver);
+        while (true) {
+            Controller.safeSwitch(Medias.Select);
 
-                        AtomicBoolean last = new AtomicBoolean(false);
-                        for (Problem problem : Controller.getProblems().get(tmp.get(ans))) {
-                            ask(problem).thenAccept(last::set).join();
-                            if (!last.get()) break;
-                        }
+            int ans = Controller.getConsole().ask(courseAsk, 0, tmp.size() - 1).join();
 
-                        if (last.get()) {
-                            Controller.getRequestedAction().add(() -> {
-                                Controller.safeSwitch(Medias.Goal);
-                                CompletableFuture<Void> goal_started = new CompletableFuture<>();
+            System.out.printf("starting course: %s...%n", tmp.get(ans));
 
-                                new Thread(() -> {
-                                    goal_started.join();
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                    Controller.getRequestedAction().add(() -> {
-                                        ask(lastProblem).join();
-                                        game(tmp, courseAsk);
-                                    });
-                                }).start();
+            CompletableFuture<Void> go_over_started = new CompletableFuture<>();
+            Controller.getRequestedAction().add(() -> {Controller.safeSwitch(Medias.Start);go_over_started.complete(null);});
+            go_over_started.join();
 
-                                goal_started.complete(null);
-                            });
-                        } else {
-                            game(tmp, courseAsk);
-                        }
-                    });
+            try {
+                Thread.sleep(12000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            boolean last = false;
+            for (Problem problem : Controller.getProblems().get(tmp.get(ans))) {
+                CompletableFuture<Boolean> ask_com = ask(problem).join();
+                last = ask_com.join();
+
+                if (!last) break;
+
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (last) {
+                CompletableFuture<Void> go_over_fin = new CompletableFuture<>();
+                Controller.getRequestedAction().add(() -> {
+                    Controller.safeSwitch(Medias.Goal);
+                    go_over_fin.complete(null);
                 });
+                go_over_fin.join();
+
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                ask(lastProblem).join();
+                Controller.safeSwitch(Medias.Fail);
+            }
+
+
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
-    public static CompletableFuture<Boolean> ask(Problem problem) {
+    public static CompletableFuture<CompletableFuture<Boolean>> ask(Problem problem) {
         Controller.setCurrentAns(problem.ans);
 
         CompletableFuture<Void> uiReady = new CompletableFuture<>();
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         Platform.runLater(() -> {
             Controller.getInstance().getProblemImageView().setVisible(true);
@@ -187,16 +198,23 @@ public class Launcher {
                     });
                     uiCleared.join();
 
-                    Controller.setLastAnswerCorrect(ans2 == Controller.getCurrentAns() || Controller.getCurrentAns() == -1);
+                    Controller.setLastAnswerCorrect(ans2 == Controller.getCurrentAns());
                     Controller.setLastWasLastProblem(problem.ans == -1);
                     Controller.setSelectedAns(-1);
-                    Controller.getRequestedAction().add(() -> Controller.safeSwitch(ans2==0?Medias.Right:Medias.Left));
 
-                    return ans2 == problem.ans || problem.ans == -1;
+                    CompletableFuture<Boolean> diverse_fin = new CompletableFuture<>();
+                    if (problem.ans != -1) {
+                        CompletableFuture<Void> go_over_fin = new CompletableFuture<>();
+                        Controller.getRequestedAction().add(() -> {Controller.safeSwitch(ans2==0?Medias.Right:Medias.Left);go_over_fin.complete(null);});
+                        go_over_fin.join();
+
+                        diverse_fin.complete(ans2 == problem.ans);
+                    }
+
+                    return diverse_fin;
                 });
     }
 
     public record Problem(String problem, String left, String right, int ans) {
     }
 }
-

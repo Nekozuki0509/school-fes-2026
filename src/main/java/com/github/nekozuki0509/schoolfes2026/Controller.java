@@ -102,6 +102,11 @@ public class Controller {
     @Setter
     private static volatile boolean lastWasLastProblem = false;
 
+    @Getter
+    private static final CompletableFuture<Void> initDone = new CompletableFuture<>();
+
+    private static MediaView warmupView;
+
     @FXML
     void initialize() {
         assert leftImageView != null : "fx:id=\"leftImageView\" was not injected: check your FXML file 'main.fxml'.";
@@ -133,23 +138,50 @@ public class Controller {
 
         // Create exactly ONE Media + MediaPlayer per type.
         // These are reused for the entire lifetime of the application.
-        for (Medias m : Medias.values()) {
-            String src = Objects.requireNonNull(
-                    Launcher.class.getResource(m.getPath())).toExternalForm();
-            mediaSources.put(m, src);
-            players.put(m, createPlayer(m, new Media(src)));
-        }
-
-        Launcher.init();
+        initPlayersSequentially(List.of(Medias.values()));
+        mediaView.setCache(true);
+        mediaView.setCacheHint(javafx.scene.CacheHint.SPEED);
     }
 
-    /**
-     * Creates a MediaPlayer for the given type and Media object.
-     * The player is intended to be long-lived and reused via stop → seek → play.
-     *
-     * All onEndOfMedia / onRepeat callbacks use Platform.runLater so they
-     * never execute inside the native GStreamer callback stack.
-     */
+    private void initPlayersSequentially(List<Medias> remaining) {
+        if (remaining.isEmpty()) {
+            System.out.println("[Init] All players ready");
+            initDone.complete(null);
+            return;
+        }
+
+        Medias m = remaining.getFirst();
+        List<Medias> rest = remaining.subList(1, remaining.size());
+
+        String src = Objects.requireNonNull(
+                Launcher.class.getResource(m.getPath())).toExternalForm();
+        mediaSources.put(m, src);
+
+        MediaPlayer player = createPlayer(m, new Media(src));
+        players.put(m, player);
+
+        player.setOnReady(() -> {
+            if (players.get(m) != player) return;
+            System.out.println("[Init] READY: " + m);
+            player.setOnReady(null);
+            player.setOnError(null);
+            initPlayersSequentially(rest);
+        });
+
+        player.setOnError(() -> {
+            if (players.get(m) != player) return;
+            System.err.println("[Init] ERROR on " + m + ", retrying: " + player.getError());
+            player.setOnReady(null);
+            player.setOnError(null);
+            player.dispose();
+            // 同じmediumを先頭に戻して再試行
+            List<Medias> retry = new java.util.ArrayList<>();
+            retry.add(m);
+            retry.addAll(rest);
+            initPlayersSequentially(retry);
+        });
+    }
+
     private static MediaPlayer createPlayer(Medias type, Media media) {
         MediaPlayer player = new MediaPlayer(media);
 
@@ -161,16 +193,13 @@ public class Controller {
                 System.err.println("[MediaPlayer] STALLED on " + type + " – waiting for buffer…"));
 
         switch (type) {
-            case GoOver, Start -> {
+            case GoOver, Select -> {
                 player.setCycleCount(MediaPlayer.INDEFINITE);
                 player.setOnRepeat(() -> {
                     if (!requestedAction.isEmpty()) {
                         Platform.runLater(() -> {
                             Runnable r;
-                            while ((r = requestedAction.poll()) != null) {
-                                Runnable task = r;
-                                new Thread(task).start();
-                            }
+                            while ((r = requestedAction.poll()) != null) new Thread(r).start();
                         });
                     }
                 });
@@ -178,61 +207,36 @@ public class Controller {
             case Left, Right -> player.setOnEndOfMedia(() ->
                     Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
             case Success -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(lastWasLastProblem ? Medias.Start : Medias.GoOver)));
-            case Fail -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(Medias.Start)));
-            case Goal -> player.setOnEndOfMedia(() ->
+                    Platform.runLater(() -> safeSwitch(lastWasLastProblem ? Medias.Select : Medias.GoOver)));
+            case Start -> player.setOnEndOfMedia(() ->
                     Platform.runLater(() -> safeSwitch(Medias.GoOver)));
         }
         return player;
     }
 
-    /**
-     * Switches to the MediaPlayer for the given media type.
-     *
-     * Design: players are created once at startup and REUSED.  Switching is
-     * simply stop(current) → seek(next, 0) → play(next).  No native resource
-     * creation or disposal happens during gameplay, eliminating all GStreamer /
-     * WMF resource-exhaustion freezes and ERROR_MEDIA_INVALID errors.
-     *
-     * If a player has entered the HALTED (unrecoverable error) state, it is
-     * disposed and recreated as a one-time recovery — this will NOT loop
-     * because the error handler does not auto-recreate.
-     */
     public static void safeSwitch(Medias mediaType) {
-        Runnable op = () -> {
-            // ── 1. Stop the current player ──────────────────────────────
-            MediaPlayer current = getInstance().getMediaView().getMediaPlayer();
-            if (current != null) {
-                current.stop();
-            }
-
-            // ── 2. Get the target player (reused, not newly created) ────
-            MediaPlayer next = players.get(mediaType);
-
-            // If the player is in an unrecoverable error state, recreate it
-            // exactly once.  The new player's onError only logs, so this
-            // cannot loop.
-            if (next.getStatus() == MediaPlayer.Status.HALTED) {
-                System.err.println("[MediaPlayer] Recovering HALTED player for " + mediaType);
-                next.dispose();
-                next = createPlayer(mediaType, new Media(mediaSources.get(mediaType)));
-                players.put(mediaType, next);
-            }
-
-            // ── 3. Seek to start and play ───────────────────────────────
-            getInstance().getMediaView().setMediaPlayer(next);
-            next.seek(Duration.ZERO);
-            next.play();
-        };
-
         if (Platform.isFxApplicationThread()) {
-            op.run();
+            safeSwitchOp(mediaType, null);
         } else {
             CompletableFuture<Void> done = new CompletableFuture<>();
-            Platform.runLater(() -> { op.run(); done.complete(null); });
+            Platform.runLater(() -> safeSwitchOp(mediaType, done));
             done.join();
         }
     }
 
+    private static void safeSwitchOp(Medias mediaType, CompletableFuture<Void> done) {
+        MediaPlayer next = players.get(mediaType);
+        if (next == null) {
+            if (done != null) done.complete(null);
+            return;
+        }
+        MediaPlayer current = getInstance().getMediaView().getMediaPlayer();
+        if (current != null && current != next) {
+            current.stop();
+        }
+        getInstance().getMediaView().setMediaPlayer(next);
+        next.seek(Duration.ZERO);
+        next.play();
+        if (done != null) done.complete(null);
+    }
 }

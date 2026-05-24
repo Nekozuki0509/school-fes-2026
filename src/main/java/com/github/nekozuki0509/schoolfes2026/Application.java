@@ -1,5 +1,6 @@
 package com.github.nekozuki0509.schoolfes2026;
 
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -17,6 +18,12 @@ public class Application extends javafx.application.Application {
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
         stage.setTitle("School Festival 2026");
         stage.setScene(scene);
+
+        new Thread(() -> {
+            Controller.getInitDone().join();
+            Launcher.init();
+        }).start();
+
         stage.show();
     }
 }
