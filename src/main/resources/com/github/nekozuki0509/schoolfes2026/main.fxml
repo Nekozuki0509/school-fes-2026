@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import com.github.nekozuki0509.schoolfes2026.*?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.media.*?>
 <?import javafx.scene.text.*?>
 
 <AnchorPane fx:id="pane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.nekozuki0509.schoolfes2026.Controller">
@@ -17,7 +15,7 @@
                 <Image url="@textures/png/problem.png" />
             </image>
         </ImageView>
-      <Label fx:id="problemLabel" prefHeight="150.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0" wrapText="true" minWidth="0" minHeight="0">
+      <Label fx:id="problemLabel" minHeight="0" minWidth="0" prefHeight="150.0" textFill="WHITE" visible="false" wrapText="true" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
          <font>
             <Font name="System Bold" size="50.0" />
          </font>
@@ -27,7 +25,7 @@
                 <Image url="@textures/png/left.png" />
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0" minWidth="0" minHeight="0">
+      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>
@@ -37,7 +35,7 @@
                 <Image url="@textures/png/right.png" />
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0" minWidth="0" minHeight="0">
+      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
          <font>
             <Font name="System Bold" size="240.0" />
          </font>
