@@ -39,7 +39,7 @@ public class Controller {
 
     @Getter
     @FXML
-    private MediaView mediaView;
+    private ImageView imageView;
 
     @FXML
     private AnchorPane pane;
@@ -67,14 +67,6 @@ public class Controller {
     @Getter
     @Setter
     private static Map<String, List<Launcher.Problem>> problems;
-
-    // URL strings for each media type (kept for error-recovery re-creation)
-    private static final Map<Medias, String> mediaSources = new HashMap<>();
-
-    // Persistent MediaPlayers — created once at startup, reused via stop/seek/play.
-    // Never disposed during gameplay.  This avoids all GStreamer / WMF native
-    // resource lifecycle issues that caused ERROR_MEDIA_INVALID and freezes.
-    private static final Map<Medias, MediaPlayer> players = new HashMap<>();
 
     @Getter
     private static final Queue<Runnable> requestedAction = new ConcurrentLinkedDeque<>();
@@ -105,13 +97,14 @@ public class Controller {
     @Getter
     private static final CompletableFuture<Void> initDone = new CompletableFuture<>();
 
-    private static MediaView warmupView;
+    @Getter
+    private static FramePlayer framePlayer;
 
     @FXML
     void initialize() {
         assert leftImageView != null : "fx:id=\"leftImageView\" was not injected: check your FXML file 'main.fxml'.";
         assert leftLabel != null : "fx:id=\"leftLabel\" was not injected: check your FXML file 'main.fxml'.";
-        assert mediaView != null : "fx:id=\"mediaView\" was not injected: check your FXML file 'main.fxml'.";
+        assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'main.fxml'.";
         assert pane != null : "fx:id=\"pane\" was not injected: check your FXML file 'main.fxml'.";
         assert problemImageView != null : "fx:id=\"problemImageView\" was not injected: check your FXML file 'main.fxml'.";
         assert problemLabel != null : "fx:id=\"problemLabel\" was not injected: check your FXML file 'main.fxml'.";
@@ -121,8 +114,9 @@ public class Controller {
 
         Instance = this;
 
-        mediaView.fitWidthProperty().bind(pane.widthProperty());
-        mediaView.fitHeightProperty().bind(pane.heightProperty());
+        imageView.fitWidthProperty().bind(pane.widthProperty());
+        imageView.fitHeightProperty().bind(pane.heightProperty());
+        imageView.setPreserveRatio(false);
 
         problemImageView.fitWidthProperty().bind(pane.widthProperty().subtract(80));
         problemLabel.prefWidthProperty().bind(pane.widthProperty().subtract(80));
@@ -136,107 +130,43 @@ public class Controller {
         leftImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
         rightImageView.fitHeightProperty().bind(pane.heightProperty().subtract(335));
 
-        // Create exactly ONE Media + MediaPlayer per type.
-        // These are reused for the entire lifetime of the application.
-        initPlayersSequentially(List.of(Medias.values()));
-        mediaView.setCache(true);
-        mediaView.setCacheHint(javafx.scene.CacheHint.SPEED);
-    }
+        imageView.setCache(true);
+        imageView.setCacheHint(javafx.scene.CacheHint.SPEED);
 
-    private void initPlayersSequentially(List<Medias> remaining) {
-        if (remaining.isEmpty()) {
-            System.out.println("[Init] All players ready");
-            initDone.complete(null);
-            return;
-        }
-
-        Medias m = remaining.getFirst();
-        List<Medias> rest = remaining.subList(1, remaining.size());
-
-        String src = Objects.requireNonNull(
-                Launcher.class.getResource(m.getPath())).toExternalForm();
-        mediaSources.put(m, src);
-
-        MediaPlayer player = createPlayer(m, new Media(src));
-        players.put(m, player);
-
-        player.setOnReady(() -> {
-            if (players.get(m) != player) return;
-            System.out.println("[Init] READY: " + m);
-            player.setOnReady(null);
-            player.setOnError(null);
-            initPlayersSequentially(rest);
-        });
-
-        player.setOnError(() -> {
-            if (players.get(m) != player) return;
-            System.err.println("[Init] ERROR on " + m + ", retrying: " + player.getError());
-            player.setOnReady(null);
-            player.setOnError(null);
-            player.dispose();
-            // 同じmediumを先頭に戻して再試行
-            List<Medias> retry = new java.util.ArrayList<>();
-            retry.add(m);
-            retry.addAll(rest);
-            initPlayersSequentially(retry);
-        });
-    }
-
-    private static MediaPlayer createPlayer(Medias type, Media media) {
-        MediaPlayer player = new MediaPlayer(media);
-
-        // Log errors but do NOT auto-recreate here.
-        // Recovery is handled in safeSwitch when the player is actually needed.
-        player.setOnError(() ->
-                System.err.println("[MediaPlayer] ERROR on " + type + ": " + player.getError()));
-        player.setOnStalled(() ->
-                System.err.println("[MediaPlayer] STALLED on " + type + " – waiting for buffer…"));
-
-        switch (type) {
-            case GoOver, Select -> {
-                player.setCycleCount(MediaPlayer.INDEFINITE);
-                player.setOnRepeat(() -> {
-                    if (!requestedAction.isEmpty()) {
-                        Platform.runLater(() -> {
-                            Runnable r;
-                            while ((r = requestedAction.poll()) != null) new Thread(r).start();
-                        });
-                    }
-                });
-            }
-            case Left, Right -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail)));
-            case Success -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(lastWasLastProblem ? Medias.Select : Medias.GoOver)));
-            case Start -> player.setOnEndOfMedia(() ->
-                    Platform.runLater(() -> safeSwitch(Medias.GoOver)));
-        }
-        return player;
+        framePlayer = new FramePlayer(imageView);
+        initDone.complete(null);
     }
 
     public static void safeSwitch(Medias mediaType) {
-        if (Platform.isFxApplicationThread()) {
-            safeSwitchOp(mediaType, null);
-        } else {
-            CompletableFuture<Void> done = new CompletableFuture<>();
-            Platform.runLater(() -> safeSwitchOp(mediaType, done));
-            done.join();
-        }
-    }
+        Runnable op = () -> {
+            Runnable onEnd = null;
+            Runnable onRepeat = null;
 
-    private static void safeSwitchOp(Medias mediaType, CompletableFuture<Void> done) {
-        MediaPlayer next = players.get(mediaType);
-        if (next == null) {
-            if (done != null) done.complete(null);
-            return;
+            switch (mediaType) {
+                case GoOver, Select -> onRepeat = () -> {
+                    if (!requestedAction.isEmpty()) {
+                        Runnable r;
+                        while ((r = requestedAction.poll()) != null) {
+                            new Thread(r).start();
+                        }
+                    }
+                };
+                case Left, Right -> onEnd = () ->
+                        safeSwitch(lastAnswerCorrect ? Medias.Success : Medias.Fail);
+                case Success -> onEnd = () ->
+                        safeSwitch(lastWasLastProblem ? Medias.Select : Medias.GoOver);
+                case Start -> onEnd = () -> safeSwitch(Medias.GoOver);
+            }
+
+            final Runnable finalOnEnd = onEnd;
+            final Runnable finalOnRepeat = onRepeat;
+            framePlayer.play(mediaType, finalOnEnd, finalOnRepeat);
+        };
+
+        if (Platform.isFxApplicationThread()) {
+            op.run();
+        } else {
+            Platform.runLater(op);
         }
-        MediaPlayer current = getInstance().getMediaView().getMediaPlayer();
-        if (current != null && current != next) {
-            current.stop();
-        }
-        getInstance().getMediaView().setMediaPlayer(next);
-        next.seek(Duration.ZERO);
-        next.play();
-        if (done != null) done.complete(null);
     }
 }

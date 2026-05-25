@@ -4,19 +4,22 @@ import lombok.Getter;
 
 @Getter
 public enum Medias {
-    Select("textures/media/select.mp4"),
-    Start("textures/media/start.mp4"),
-    GoOver("textures/media/go_over.mp4"),
-    Left("textures/media/left.mp4"),
-    Right("textures/media/right.mp4"),
-    Success("textures/media/success.mp4"),
-    Fail("textures/media/fail.mp4"),
-    Goal("textures/media/goal.mp4");
+    Select("select", 181, true),
+    Start("start", 230, false),
+    GoOver("go_over", 61, true),
+    Left("left", 83, false),
+    Right("right", 81, false),
+    Success("success", 125, false),
+    Fail("fail", 51, false),
+    Goal("goal", 191, false);
 
-    private final String path;
+    private final String folderName;
+    private final int frameCount;
+    private final boolean loop;
 
-    Medias(final String path) {
-        this.path = path;
+    Medias(String folderName, int frameCount, boolean loop) {
+        this.folderName = folderName;
+        this.frameCount = frameCount;
+        this.loop = loop;
     }
-
 }
