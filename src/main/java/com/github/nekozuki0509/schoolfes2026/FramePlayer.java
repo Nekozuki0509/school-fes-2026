@@ -30,6 +30,7 @@ public class FramePlayer {
     // 先読みバッファ
     private final BlockingQueue<Image> buffer = new LinkedBlockingQueue<>(BUFFER_SIZE);
     private ExecutorService loader;
+    private boolean audioPlayed = false;
 
     public FramePlayer(ImageView imageView) {
         this.imageView = imageView;
@@ -42,6 +43,7 @@ public class FramePlayer {
         this.lastFrameTime = 0;
         this.onEnd = onEnd;
         this.onRepeat = onRepeat;
+        this.audioPlayed = false;
         buffer.clear();
 
         loader = Executors.newSingleThreadExecutor();
@@ -84,6 +86,18 @@ public class FramePlayer {
                 imageView.setImage(img);
                 frameIndex++;
 
+                // 最初のフレーム表示時に音を再生
+                if (frameIndex == 56 && media == Medias.Success && !audioPlayed) {
+                    audioPlayed = true;
+                    String url = Objects.requireNonNull(
+                            FramePlayer.class.getResource(
+                                    "/com/github/nekozuki0509/schoolfes2026/textures/music/tv_quiz_luxury_correct.mp3"
+                            )
+                    ).toExternalForm();
+                    AudioClip clip = new AudioClip(url);
+                    clip.play();
+                }
+
                 if (frameIndex >= current.getFrameCount()) {
                     if (current.isLoop()) {
                         frameIndex = 0;
@@ -111,21 +125,6 @@ public class FramePlayer {
                         if (onRepeat != null) onRepeat.run();
                     } else {
                         stop();
-                        if (media==Medias.Success) {
-                            new Thread(() -> {
-                                try {
-                                    Thread.sleep(0);
-                                } catch (InterruptedException ignored) {
-                                }
-                                String url = Objects.requireNonNull(
-                                        FramePlayer.class.getResource(
-                                                "/com/github/nekozuki0509/schoolfes2026/textures/music/tv_quiz_luxury_correct.mp3"
-                                        )
-                                ).toExternalForm();
-                                AudioClip clip = new AudioClip(url);
-                                clip.play();
-                            }).start();
-                        }
                         if (onEnd != null) onEnd.run();
 
                     }
