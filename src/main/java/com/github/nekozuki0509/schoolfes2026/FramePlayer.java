@@ -114,7 +114,7 @@ public class FramePlayer {
                         if (media==Medias.Success) {
                             new Thread(() -> {
                                 try {
-                                    Thread.sleep(100);
+                                    Thread.sleep(0);
                                 } catch (InterruptedException ignored) {
                                 }
                                 String url = Objects.requireNonNull(
