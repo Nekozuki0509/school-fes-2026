@@ -91,7 +91,7 @@ public class FramePlayer {
                     audioPlayed = true;
                     String url = Objects.requireNonNull(
                             FramePlayer.class.getResource(
-                                    "/com/github/nekozuki0509/schoolfes2026/textures/music/tv_quiz_luxury_correct.mp3"
+                                    "/com/github/nekozuki0509/schoolfes2026/textures/music/Quiz-Ding_Dong.mp3"
                             )
                     ).toExternalForm();
                     AudioClip clip = new AudioClip(url);
