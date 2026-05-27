@@ -8,6 +8,7 @@ import javafx.scene.image.ImageView;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import javafx.scene.media.AudioClip;
 
 public class FramePlayer {
 
@@ -109,6 +110,20 @@ public class FramePlayer {
                         if (onRepeat != null) onRepeat.run();
                     } else {
                         stop();
+                        if (frameIndex >= current.getFrameCount()){
+                            if (current.isLoop()) {
+
+                            }else{
+                                stop();
+                                new Thread(() -> {
+                                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+                                    Platform.runLater(() -> {
+                                        AudioClip clip = new AudioClip(tv_quiz_luxury_correct.wav);
+                                        clip.play();
+                                    });
+                                }).start();
+                            }
+                        }
                         if (onEnd != null) onEnd.run();
                     }
                 }
