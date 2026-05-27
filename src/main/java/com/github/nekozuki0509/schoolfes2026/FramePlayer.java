@@ -117,7 +117,12 @@ public class FramePlayer {
                                     Thread.sleep(100);
                                 } catch (InterruptedException ignored) {
                                 }
-                                AudioClip clip = new AudioClip("C:\\Users\\Owner\\IdeaProjects\\school-fes-2026\\src\\main\\resources\\com\\github\\nekozuki0509\\schoolfes2026\\textures\\music");
+                                String url = Objects.requireNonNull(
+                                        FramePlayer.class.getResource(
+                                                "/com/github/nekozuki0509/schoolfes2026/textures/music/tv_quiz_luxury_correct.mp3"
+                                        )
+                                ).toExternalForm();
+                                AudioClip clip = new AudioClip(url);
                                 clip.play();
                             }).start();
                         }
