@@ -1,7 +1,6 @@
 package com.github.nekozuki0509.schoolfes2026;
 
 import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -9,6 +8,8 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.scene.media.AudioClip;
+
+
 
 public class FramePlayer {
 
@@ -110,21 +111,18 @@ public class FramePlayer {
                         if (onRepeat != null) onRepeat.run();
                     } else {
                         stop();
-                        if (frameIndex >= current.getFrameCount()){
-                            if (current.isLoop()) {
-
-                            }else{
-                                stop();
-                                new Thread(() -> {
-                                    try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
-                                    Platform.runLater(() -> {
-                                        AudioClip clip = new AudioClip(tv_quiz_luxury_correct.wav);
-                                        clip.play();
-                                    });
-                                }).start();
-                            }
+                        if (media==Medias.Success) {
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException ignored) {
+                                }
+                                AudioClip clip = new AudioClip("C:\\Users\\Owner\\IdeaProjects\\school-fes-2026\\src\\main\\resources\\com\\github\\nekozuki0509\\schoolfes2026\\textures\\music");
+                                clip.play();
+                            }).start();
                         }
                         if (onEnd != null) onEnd.run();
+
                     }
                 }
             }

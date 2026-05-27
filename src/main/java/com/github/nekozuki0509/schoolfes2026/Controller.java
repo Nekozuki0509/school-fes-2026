@@ -50,7 +50,7 @@ public class Controller {
 
     @Getter
     @FXML
-    private Label problemLabel;
+    private AutoShrinkLabel problemLabel;
 
     @Getter
     @FXML

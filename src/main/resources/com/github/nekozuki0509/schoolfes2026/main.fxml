@@ -15,11 +15,11 @@
                 <Image url="@textures/png/problem.png" />
             </image>
         </ImageView>
-      <Label fx:id="problemLabel" minHeight="0" minWidth="0" prefHeight="150.0" textFill="WHITE" visible="false" wrapText="true" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
+      <AutoShrinkLabel fx:id="problemLabel" minHeight="0" minWidth="0" prefHeight="150.0" textFill="WHITE" visible="false" wrapText="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
          <font>
             <Font name="System Bold" size="50.0" />
          </font>
-      </Label>
+      </AutoShrinkLabel>
         <ImageView fx:id="leftImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
             <image>
                 <Image url="@textures/png/left.png" />
