@@ -14,11 +14,14 @@ public class Application extends javafx.application.Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        BGMPlayer bgm = new BGMPlayer();
+        bgm.load("src/main/resources/com/github/nekozuki0509/schoolfes2026/textures/music/maou_game_dangeon19.wav");
+        bgm.setVolume(0.7f);
+        bgm.play();
         FXMLLoader fxmlLoader = new FXMLLoader(Application.class.getResource("main.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1280, 720);
         stage.setTitle("School Festival 2026");
         stage.setScene(scene);
-
         new Thread(() -> {
             Controller.getInitDone().join();
             Launcher.init();
