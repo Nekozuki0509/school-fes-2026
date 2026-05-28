@@ -1,7 +1,10 @@
 package com.github.nekozuki0509.schoolfes2026;
 
-import java.io.File;
-import javax.sound.sampled.*;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
+import java.net.URL;
 
 public class BGMPlayer {
 
@@ -10,15 +13,14 @@ public class BGMPlayer {
 
     /**
      * 指定したWAVファイルを読み込む
+     *
      * @param filePath WAVファイルのパス
      */
-    public void load(String filePath) {
+    public void load(URL filePath) {
         try {
             stop(); // 既存の再生を停止
 
-            File audioFile = new File(filePath);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(filePath);
             clip = AudioSystem.getClip();
             clip.open(audioStream);
             audioStream.close();
@@ -44,15 +46,6 @@ public class BGMPlayer {
     }
 
     /**
-     * BGMを一時停止する
-     */
-    public void pause() {
-        if (clip != null && clip.isRunning()) {
-            clip.stop();
-        }
-    }
-
-    /**
      * BGMを停止してリセットする
      */
     public void stop() {
@@ -66,6 +59,7 @@ public class BGMPlayer {
 
     /**
      * 音量を設定する
+     *
      * @param volume 0.0f（無音）〜 1.0f（最大）
      */
     public void setVolume(float volume) {
@@ -73,15 +67,8 @@ public class BGMPlayer {
             float min = volumeControl.getMinimum(); // 通常 -80.0 dB
             float max = volumeControl.getMaximum(); // 通常 6.0 dB
             // 線形の音量をデシベルに変換
-            float dB = min + (max - min) * Math.max(0f, Math.min(1f, volume));
+            float dB = min + (max - min) * Math.clamp(volume, 0f, 1f);
             volumeControl.setValue(dB);
         }
-    }
-
-    /**
-     * 再生中かどうかを返す
-     */
-    public boolean isPlaying() {
-        return clip != null && clip.isRunning();
     }
 }

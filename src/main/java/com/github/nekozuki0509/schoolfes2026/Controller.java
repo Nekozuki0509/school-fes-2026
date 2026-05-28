@@ -2,19 +2,17 @@ package com.github.nekozuki0509.schoolfes2026;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
-import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.net.URL;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -43,10 +41,6 @@ public class Controller {
 
     @FXML
     private AnchorPane pane;
-
-    @Getter
-    @FXML
-    private ImageView problemImageView;
 
     @Getter
     @FXML
@@ -106,7 +100,6 @@ public class Controller {
         assert leftLabel != null : "fx:id=\"leftLabel\" was not injected: check your FXML file 'main.fxml'.";
         assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'main.fxml'.";
         assert pane != null : "fx:id=\"pane\" was not injected: check your FXML file 'main.fxml'.";
-        assert problemImageView != null : "fx:id=\"problemImageView\" was not injected: check your FXML file 'main.fxml'.";
         assert problemLabel != null : "fx:id=\"problemLabel\" was not injected: check your FXML file 'main.fxml'.";
         assert progressBar != null : "fx:id=\"progressBar\" was not injected: check your FXML file 'main.fxml'.";
         assert rightImageView != null : "fx:id=\"rightImageView\" was not injected: check your FXML file 'main.fxml'.";
@@ -118,7 +111,6 @@ public class Controller {
         imageView.fitHeightProperty().bind(pane.heightProperty());
         imageView.setPreserveRatio(false);
 
-        problemImageView.fitWidthProperty().bind(pane.widthProperty().subtract(80));
         problemLabel.prefWidthProperty().bind(pane.widthProperty().subtract(80));
 
         leftImageView.fitWidthProperty().bind(pane.widthProperty().divide(2).subtract(60));

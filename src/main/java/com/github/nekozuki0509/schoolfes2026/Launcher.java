@@ -49,13 +49,16 @@ public class Launcher {
             System.out.printf("starting course: %s...%n", tmp.get(ans));
 
             CompletableFuture<Void> go_over_started = new CompletableFuture<>();
-            Controller.getRequestedAction().add(() -> {Controller.safeSwitch(Medias.Start);go_over_started.complete(null);});
+            Controller.getRequestedAction().add(() -> {
+                Controller.safeSwitch(Medias.Start);
+                go_over_started.complete(null);
+            });
             go_over_started.join();
 
             try {
                 Thread.sleep(12000);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
 
             boolean last = false;
@@ -68,7 +71,7 @@ public class Launcher {
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
 
@@ -83,7 +86,7 @@ public class Launcher {
                 try {
                     Thread.sleep(10000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
                 ask(lastProblem).join();
                 Controller.safeSwitch(Medias.Fail);
@@ -93,7 +96,7 @@ public class Launcher {
             try {
                 Thread.sleep(15000);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
     }
@@ -104,7 +107,6 @@ public class Launcher {
         CompletableFuture<Void> uiReady = new CompletableFuture<>();
 
         Platform.runLater(() -> {
-            Controller.getInstance().getProblemImageView().setVisible(true);
             Controller.getInstance().getProblemLabel().setText(problem.problem);
             Controller.getInstance().getProblemLabel().setVisible(true);
             Controller.getInstance().getLeftImageView().setVisible(true);
@@ -129,7 +131,7 @@ public class Launcher {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
 
                 now -= one;
@@ -173,7 +175,7 @@ public class Launcher {
                             try {
                                 Thread.sleep(100);
                             } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
+                                e.printStackTrace();
                             }
                         } else {
                             break;
@@ -182,7 +184,6 @@ public class Launcher {
 
                     CompletableFuture<Void> uiCleared = new CompletableFuture<>();
                     Platform.runLater(() -> {
-                        Controller.getInstance().getProblemImageView().setVisible(false);
                         Controller.getInstance().getProblemLabel().setVisible(false);
                         Controller.getInstance().getProblemLabel().setText("");
                         Controller.getInstance().getLeftImageView().setVisible(false);
@@ -205,7 +206,10 @@ public class Launcher {
                     CompletableFuture<Boolean> diverse_fin = new CompletableFuture<>();
                     if (problem.ans != -1) {
                         CompletableFuture<Void> go_over_fin = new CompletableFuture<>();
-                        Controller.getRequestedAction().add(() -> {Controller.safeSwitch(ans2==0?Medias.Right:Medias.Left);go_over_fin.complete(null);});
+                        Controller.getRequestedAction().add(() -> {
+                            Controller.safeSwitch(ans2 == 0 ? Medias.Right : Medias.Left);
+                            go_over_fin.complete(null);
+                        });
                         go_over_fin.join();
 
                         diverse_fin.complete(ans2 == problem.ans);

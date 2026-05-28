@@ -1,44 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.github.nekozuki0509.schoolfes2026.*?>
-<?import javafx.scene.control.*?>
+<?import com.github.nekozuki0509.schoolfes2026.AutoShrinkLabel?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-<AnchorPane fx:id="pane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.nekozuki0509.schoolfes2026.Controller">
+<?import javafx.scene.text.Font?>
+<AnchorPane fx:id="pane" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.nekozuki0509.schoolfes2026.Controller">
     <children>
-        <ImageView fx:id="imageView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-        <ProgressBar fx:id="progressBar" layoutX="40.0" layoutY="180.0" prefHeight="30.0" progress="0.0" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="200.0" />
-        <ImageView fx:id="problemImageView" fitHeight="150.0" pickOnBounds="true" visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
+        <ImageView fx:id="imageView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                   AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+        <ProgressBar fx:id="progressBar" layoutX="40.0" layoutY="180.0" prefHeight="30.0" progress="0.0" visible="false"
+                     AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="200.0"/>
+        <AutoShrinkLabel fx:id="problemLabel" minHeight="0" minWidth="0" prefHeight="150.0" textFill="WHITE"
+                         visible="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0"
+                         AnchorPane.topAnchor="40.0">
+            <font>
+                <Font name="System Bold" size="50.0"/>
+            </font>
+        </AutoShrinkLabel>
+        <ImageView fx:id="leftImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0"
+                   AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
             <image>
-                <Image url="@textures/png/problem.png" />
+                <Image url="@textures/png/left.png"/>
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="problemLabel" minHeight="0" minWidth="0" prefHeight="150.0" textFill="WHITE" visible="false" wrapText="false" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="40.0">
-         <font>
-            <Font name="System Bold" size="50.0" />
-         </font>
-      </AutoShrinkLabel>
-        <ImageView fx:id="leftImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
+        <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0"
+                         visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0"
+                         AnchorPane.topAnchor="270.0">
+            <font>
+                <Font name="System Bold" size="240.0"/>
+            </font>
+        </AutoShrinkLabel>
+        <ImageView fx:id="rightImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0"
+                   AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
             <image>
-                <Image url="@textures/png/left.png" />
+                <Image url="@textures/png/right.png"/>
             </image>
         </ImageView>
-      <AutoShrinkLabel fx:id="leftLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="270.0">
-         <font>
-            <Font name="System Bold" size="240.0" />
-         </font>
-      </AutoShrinkLabel>
-        <ImageView fx:id="rightImageView" pickOnBounds="true" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
-            <image>
-                <Image url="@textures/png/right.png" />
-            </image>
-        </ImageView>
-      <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0" visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="270.0">
-         <font>
-            <Font name="System Bold" size="240.0" />
-         </font>
-      </AutoShrinkLabel>
+        <AutoShrinkLabel fx:id="rightLabel" alignment="CENTER" minHeight="0" minWidth="0" prefWidth="600.0"
+                         visible="false" AnchorPane.bottomAnchor="65.0" AnchorPane.rightAnchor="40.0"
+                         AnchorPane.topAnchor="270.0">
+            <font>
+                <Font name="System Bold" size="240.0"/>
+            </font>
+        </AutoShrinkLabel>
     </children>
 </AnchorPane>

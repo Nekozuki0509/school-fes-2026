@@ -3,12 +3,14 @@ package com.github.nekozuki0509.schoolfes2026;
 import javafx.animation.AnimationTimer;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import java.util.Objects;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import javafx.scene.media.AudioClip;
 
+import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class FramePlayer {
@@ -24,9 +26,6 @@ public class FramePlayer {
     private int frameIndex;
     private long lastFrameTime;
 
-    private Runnable onEnd;
-    private Runnable onRepeat;
-
     // 先読みバッファ
     private final BlockingQueue<Image> buffer = new LinkedBlockingQueue<>(BUFFER_SIZE);
     private ExecutorService loader;
@@ -41,8 +40,6 @@ public class FramePlayer {
         this.current = media;
         this.frameIndex = 0;
         this.lastFrameTime = 0;
-        this.onEnd = onEnd;
-        this.onRepeat = onRepeat;
         this.audioPlayed = false;
         buffer.clear();
 
@@ -113,7 +110,7 @@ public class FramePlayer {
                                         current.getFolderName(), current.getFolderName(), idx + 1);
                                 try {
                                     Image i = new Image(
-                                            FramePlayer.class.getResourceAsStream(p),
+                                            Objects.requireNonNull(FramePlayer.class.getResourceAsStream(p)),
                                             1280, 720, false, false);
                                     buffer.put(i);
                                 } catch (InterruptedException e) {

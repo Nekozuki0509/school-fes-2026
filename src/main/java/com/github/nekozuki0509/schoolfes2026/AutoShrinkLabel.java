@@ -12,16 +12,24 @@ public class AutoShrinkLabel extends Label {
     private static final double MIN_FONT_SIZE = 1.0;
     private static final double STEP = 0.5;
 
-    public AutoShrinkLabel() { init(); }
-    public AutoShrinkLabel(String text) { super(text); init(); }
+    public AutoShrinkLabel() {
+        init();
+    }
+
+    public AutoShrinkLabel(String text) {
+        super(text);
+        init();
+    }
 
     private void init() {
         setMinSize(0, 0);
         setEllipsisString("");
 
         layoutBoundsProperty().addListener((obs, old, val) -> scheduleAdjust());
-        textProperty()        .addListener((obs, old, val) -> scheduleAdjust());
-        visibleProperty()     .addListener((obs, old, val) -> { if (val) scheduleAdjust(); });
+        textProperty().addListener((obs, old, val) -> scheduleAdjust());
+        visibleProperty().addListener((obs, old, val) -> {
+            if (val) scheduleAdjust();
+        });
     }
 
     private void scheduleAdjust() {
@@ -35,8 +43,8 @@ public class AutoShrinkLabel extends Label {
         if (text == null || text.isEmpty()) return;
 
         Insets insets = getInsets();
-        double availW = getWidth()  - insets.getLeft() - insets.getRight();
-        double availH = getHeight() - insets.getTop()  - insets.getBottom();
+        double availW = getWidth() - insets.getLeft() - insets.getRight();
+        double availH = getHeight() - insets.getTop() - insets.getBottom();
 
         if (availW <= 0 || availH <= 0) return;
 
