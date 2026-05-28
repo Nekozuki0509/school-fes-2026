@@ -9,13 +9,14 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class Application extends javafx.application.Application {
 
     @Override
     public void start(Stage stage) throws IOException {
         BGMPlayer bgm = new BGMPlayer();
-        bgm.load("src/main/resources/com/github/nekozuki0509/schoolfes2026/textures/music/maou_game_dangeon19.wav");
+        bgm.load((Application.class.getResource("maou_game_dangeon19.wav")).toExternalForm());
         bgm.setVolume(70f);
         bgm.play();
         FXMLLoader fxmlLoader = new FXMLLoader(Application.class.getResource("main.fxml"));
